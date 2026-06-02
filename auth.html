@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Магазин — Вход / Регистрация</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body data-title="Магазин — Вход / Регистрация">
+  <header id="header"></header>
+
+  <main class="container">
+    <section id="auth-container" class="auth-shell">
+      <div class="tabs" role="tablist" aria-label="Вход и регистрация">
+        <button id="show-login" class="tab is-active" type="button" role="tab" aria-selected="true">Вход</button>
+        <button id="show-register" class="tab" type="button" role="tab" aria-selected="false">Регистрация</button>
+      </div>
+
+      <form id="login-form" class="auth-form" novalidate>
+        <h2>Вход</h2>
+        <label>
+          Email
+          <input name="email" type="email" autocomplete="email" required>
+          <small class="error" data-error-for="email"></small>
+        </label>
+        <label>
+          Пароль
+          <div class="password-wrap">
+            <input name="password" type="password" autocomplete="current-password" required minlength="6">
+            <button type="button" class="toggle-password" data-target="password">👁</button>
+          </div>
+          <small class="error" data-error-for="password"></small>
+        </label>
+        <button class="btn btn-primary" type="submit">Войти</button>
+      </form>
+
+      <form id="register-form" class="auth-form" novalidate hidden>
+        <h2>Регистрация</h2>
+        <label>
+          Имя
+          <input name="name" type="text" autocomplete="name" required minlength="2">
+          <small class="error" data-error-for="name"></small>
+        </label>
+        <label>
+          Email
+          <input name="email" type="email" autocomplete="email" required>
+          <small class="error" data-error-for="email"></small>
+        </label>
+        <label>
+          Пароль
+          <div class="password-wrap">
+            <input name="password" type="password" autocomplete="new-password" required minlength="6">
+            <button type="button" class="toggle-password" data-target="password">👁</button>
+          </div>
+          <small class="error" data-error-for="password"></small>
+        </label>
+        <button class="btn btn-primary" type="submit">Зарегистрироваться</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/models.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+
+</html>

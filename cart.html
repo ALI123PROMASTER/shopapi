@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Магазин — Корзина</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body data-title="Магазин — Корзина">
+  <header id="header"></header>
+
+  <main class="container">
+    <section class="page-head">
+      <h2>Корзина</h2>
+      <p>Управляйте количеством товаров и оформляйте заказ.</p>
+    </section>
+
+    <section id="cart-items" class="cart-list" aria-live="polite"></section>
+
+    <section id="cart-summary" class="cart-summary">
+      <p><b>Итого:</b> <span id="cart-total">0.00 $</span></p>
+      <div class="actions-row">
+        <button id="checkout-btn" class="btn btn-primary">Оформить заказ</button>
+        <a class="btn btn-ghost" href="index.html">В каталог</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/models.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+
+</html>
