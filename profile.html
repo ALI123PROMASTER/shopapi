@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopix — Сравнение</title>
+    <title>Shopix — Профиль</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -12,21 +12,30 @@
     <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Shopix — Сравнение">
+<body data-title="Shopix — Профиль">
     <header id="header"></header>
 
     <main>
         <div class="page-header">
-            <h2>Сравнение товаров</h2>
-            <p>Выберите 2-3 товара и сравните характеристики.</p>
+            <h2>Профиль</h2>
         </div>
-        <div id="compare-content" aria-live="polite"></div>
+        <div id="profile-info" class="profile-card"></div>
+        <div class="section-title">История заказов</div>
+        <div id="orders-list"></div>
+        <div id="orders-empty" class="empty-state" style="display:none">
+            <i class="ti ti-receipt"></i>
+            <h3>Заказов пока нет</h3>
+            <button class="btn btn-outline" type="button" onclick="location.href='index.html'">В каталог</button>
+        </div>
+        <button class="btn btn-outline" id="logout-btn" style="margin-top:24px">
+            <i class="ti ti-logout"></i> Выйти
+        </button>
     </main>
 
     <script src="js/models.js"></script>
     <script src="js/api.js"></script>
     <script src="js/common.js"></script>
-    <script src="js/compare.js"></script>
+    <script src="js/profile.js"></script>
 </body>
 
 </html>

@@ -2,75 +2,76 @@ async function renderWishlist() {
   const root = document.getElementById("wishlist-items");
   if (!root) return;
 
-  const ids = getWishlist();
-  if (!ids.length) {
+  const user = getCurrentUser();
+  if (!user) {
+    window.location.href = "auth.html";
+    return;
+  }
+
+  const items = await getWishlist(user.email);
+  if (!items.length) {
     root.innerHTML = `
-      <div class="placeholder">
+      <div class="empty-state">
+        <i class="ti ti-heart-off"></i>
         <h3>Избранное пока пусто</h3>
         <p>Нажмите на сердечко в каталоге, чтобы добавить товар.</p>
-        <a class="btn btn-primary" href="index.html">Перейти в каталог</a>
+        <button class="btn btn-primary" type="button" onclick="location.href='index.html'">Перейти в каталог</button>
       </div>
     `;
     return;
   }
 
-  const products = (
-    await Promise.all(ids.map((id) => getProductById(id)))
-  ).filter(Boolean);
-  if (!products.length) {
-    root.innerHTML = `
-      <div class="placeholder">
-        <h3>Не удалось загрузить избранные товары</h3>
-      </div>
-    `;
-    return;
-  }
-
-  root.innerHTML = products
+  root.innerHTML = items
     .map(
-      (product) => `
-        <article class="card" data-product-id="${product.id}">
-          <div class="card-media">
-            <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.title)}">
+      (item) => `
+        <div class="card" data-product-id="${item.id}">
+          <div class="card-img-wrap">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}">
+            <button class="wish-btn active" type="button" data-action="remove" data-id="${item.id}"><i class="ti ti-heart"></i></button>
           </div>
           <div class="card-body">
-            <div class="card-meta">${escapeHtml(product.category)}</div>
-            <h3 class="card-title">${escapeHtml(product.title)}</h3>
-            <div class="rating">${renderStars(product.rating?.rate, product.rating?.count)}</div>
-            <div class="price">${formatPrice(product.price)}</div>
-            <div class="actions-row">
-              <a class="btn btn-ghost" href="product.html?id=${product.id}">Подробнее</a>
-              <button class="btn btn-primary" type="button" data-action="add" data-product-id="${product.id}">В корзину</button>
+            <div class="card-category">${escapeHtml(item.category || "")}</div>
+            <div class="card-title">${escapeHtml(item.title)}</div>
+            <div><span class="card-stars">${new Product(item).getStars()}</span><span class="card-reviews">(${item.rating?.count || 0})</span></div>
+            <div class="card-footer">
+              <div class="card-price">$${Number(item.price || 0).toFixed(2)}</div>
+              <button class="btn-add" type="button" data-action="add" data-id="${item.id}"><i class="ti ti-plus"></i></button>
             </div>
-            <button class="btn btn-danger" type="button" data-action="remove" data-product-id="${product.id}">Удалить из избранного</button>
           </div>
-        </article>
+        </div>
       `,
     )
     .join("");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme();
+
   const root = document.getElementById("wishlist-items");
   if (!root) return;
 
   renderWishlist();
 
-  root.addEventListener("click", (event) => {
-    const button = event.target.closest("button[data-action]");
+  root.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-action]");
     if (!button) return;
 
-    const productId = Number(button.dataset.productId);
-    const action = button.dataset.action;
-
-    if (action === "add") {
-      addToCart(productId, 1);
-      showToast("Товар добавлен в корзину", "success");
+    const productId = Number(button.dataset.id);
+    const user = getCurrentUser();
+    if (!user) {
+      window.location.href = "auth.html";
       return;
     }
 
-    if (action === "remove") {
-      toggleWishlist(productId);
+    if (button.dataset.action === "add") {
+      getCartInstance().addItem(productId);
+      updateCartCount();
+      showToast("Добавлено в корзину!", "success");
+      return;
+    }
+
+    if (button.dataset.action === "remove") {
+      await fbRemoveFromWishlist(user.email, productId);
       showToast("Удалено из избранного", "success");
       renderWishlist();
     }

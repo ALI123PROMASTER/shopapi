@@ -55,6 +55,48 @@ function logoutUser() {
   localStorage.removeItem(CURRENT_USER_KEY);
 }
 
+function getCartInstance() {
+  const user = getCurrentUser();
+  return new Cart(user ? user.email : "guest");
+}
+
+function updateCartCount() {
+  const cart = getCartInstance();
+  const badge = document.getElementById("cart-count");
+  if (badge) badge.textContent = cart.getCount();
+  const baseTitle = document.body?.dataset?.title || "Shopix";
+  document.title =
+    cart.getCount() > 0 ? `(${cart.getCount()}) ${baseTitle}` : baseTitle;
+}
+
+function getAvatar(name) {
+  const source = String(name || "?");
+  const letter = source.charAt(0).toUpperCase();
+  const colors = ["#d4956a", "#d4776a", "#c28e6b", "#e0b08a", "#b58266"];
+  const color = colors[letter.charCodeAt(0) % colors.length];
+  return `<span class="avatar" style="background:${color}">${escapeHtml(letter)}</span>`;
+}
+
+function applyTheme() {
+  const theme = localStorage.getItem("theme") || "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+  const icon = document.getElementById("theme-icon");
+  if (icon) {
+    icon.className = theme === "dark" ? "ti ti-sun" : "ti ti-moon";
+  }
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem("theme") || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", next);
+  document.documentElement.setAttribute("data-theme", next);
+  const icon = document.getElementById("theme-icon");
+  if (icon) {
+    icon.className = next === "dark" ? "ti ti-sun" : "ti ti-moon";
+  }
+}
+
 function getUserScopeId() {
   const user = getCurrentUser();
   return user?.email ? user.email.toLowerCase() : "guest";
@@ -70,14 +112,6 @@ function getCartItems() {
 
 function saveCartItems(items) {
   writeJson(getScopedKey("cart"), items);
-}
-
-function getWishlist() {
-  return readJson(getScopedKey("wishlist"), []);
-}
-
-function saveWishlist(ids) {
-  writeJson(getScopedKey("wishlist"), ids);
 }
 
 function getCompareList() {
@@ -96,47 +130,53 @@ function saveRecentViewed(ids) {
   writeJson(getScopedKey("recent"), ids);
 }
 
-function getCartCount() {
-  return getCartItems().reduce(
-    (acc, item) => acc + Number(item.quantity || 0),
-    0,
-  );
+function getWishlistIds() {
+  return readJson(getScopedKey("wishlist"), []);
 }
 
-function addToCart(productId, quantity = 1) {
-  const cart = new Cart(getCartItems());
-  cart.addItem(Number(productId), Number(quantity || 1));
-  saveCartItems(cart.items);
-  refreshHeaderAndTitle();
+function saveWishlistIds(ids) {
+  writeJson(getScopedKey("wishlist"), ids);
 }
 
-function setCartQuantity(productId, quantity) {
-  const cart = new Cart(getCartItems());
-  cart.setQuantity(Number(productId), Number(quantity));
-  saveCartItems(cart.items);
-  refreshHeaderAndTitle();
-}
-
-function removeFromCart(productId) {
-  const cart = new Cart(getCartItems());
-  cart.removeItem(Number(productId));
-  saveCartItems(cart.items);
-  refreshHeaderAndTitle();
-}
-
-function isInWishlist(productId) {
-  return getWishlist().includes(Number(productId));
-}
-
-function toggleWishlist(productId) {
+function toggleWishlistId(productId) {
   const id = Number(productId);
-  const current = getWishlist();
+  const current = getWishlistIds();
   const exists = current.includes(id);
   const next = exists
     ? current.filter((item) => item !== id)
     : [...current, id];
-  saveWishlist(next);
+  saveWishlistIds(next);
   return !exists;
+}
+
+function getCartCount() {
+  return getCartInstance().getCount();
+}
+
+function addToCart(productId, quantity = 1) {
+  const cart = getCartInstance();
+  cart.addItem(Number(productId), Number(quantity || 1));
+  updateCartCount();
+}
+
+function setCartQuantity(productId, quantity) {
+  const cart = getCartInstance();
+  cart.updateQty(Number(productId), Number(quantity));
+  updateCartCount();
+}
+
+function removeFromCart(productId) {
+  const cart = getCartInstance();
+  cart.removeItem(Number(productId));
+  updateCartCount();
+}
+
+function isInWishlist(productId) {
+  return getWishlistIds().includes(Number(productId));
+}
+
+function toggleWishlist(productId) {
+  return toggleWishlistId(productId);
 }
 
 function isInCompare(productId) {
@@ -190,31 +230,34 @@ function markActiveLink() {
 }
 
 function updateDocumentTitleCount() {
-  const base = document.body?.dataset?.title || "Магазин";
-  const count = getCartCount();
-  document.title = count > 0 ? `(${count}) ${base}` : base;
+  updateCartCount();
 }
 
 function getToastRoot() {
-  let root = document.querySelector(".toast-root");
+  let root = document.querySelector(".toast-container");
   if (root) return root;
 
   root = document.createElement("div");
-  root.className = "toast-root";
+  root.className = "toast-container";
   document.body.appendChild(root);
   return root;
 }
 
-function showToast(message, type = "info") {
+function showToast(message, type = "success") {
   const root = getToastRoot();
   const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <div class="toast-dot"></div>
+    <span>${escapeHtml(message)}</span>
+  `;
   root.appendChild(toast);
 
   setTimeout(() => {
-    toast.remove();
-  }, 2600);
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
 }
 
 function renderHeader() {
@@ -223,27 +266,37 @@ function renderHeader() {
 
   const user = getCurrentUser();
   const cartCount = getCartCount();
-  const initial = (user?.name || "Гость").charAt(0).toUpperCase();
-  const activeColor = getAvatarColor(user?.name || user?.email || "guest");
 
   header.innerHTML = `
     <div class="header-inner">
-      <a class="brand" href="index.html">Drift Store</a>
+      <a class="brand" href="index.html">Shopi<span class="logo-accent">x</span></a>
       <nav class="main-nav">
         <a data-page="index.html" href="index.html">Главная</a>
         <a data-page="wishlist.html" href="wishlist.html">Избранное</a>
         <a data-page="compare.html" href="compare.html">Сравнение</a>
-        <a data-page="cart.html" href="cart.html">Корзина <span class="cart-badge">${cartCount}</span></a>
+        <a data-page="cart.html" href="cart.html">Корзина <span id="cart-count" class="cart-badge">${cartCount}</span></a>
+        <a data-page="profile.html" href="profile.html">Профиль</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-theme" id="theme-toggle" type="button" aria-label="Переключить тему"><i id="theme-icon" class="ti ti-sun"></i></button>
         ${
           user
-            ? `<span class="user-box"><span class="avatar" style="background:${activeColor}">${escapeHtml(initial)}</span><span>Привет, ${escapeHtml(user.name)}</span><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button></span>`
-            : `<a data-page="auth.html" href="auth.html">Вход / Регистрация</a>`
+            ? `<a class="user-box" href="profile.html">${getAvatar(user.name || user.email)}<span>${escapeHtml(user.name || user.email)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
+            : `<a class="btn btn-ghost" data-page="auth.html" href="auth.html">Вход / Регистрация</a>`
         }
-      </nav>
+      </div>
     </div>
   `;
 
   markActiveLink();
+  const savedTheme = localStorage.getItem("theme") || "dark";
+  const themeIcon = document.getElementById("theme-icon");
+  if (themeIcon) {
+    themeIcon.className = savedTheme === "dark" ? "ti ti-sun" : "ti ti-moon";
+  }
+  document
+    .getElementById("theme-toggle")
+    ?.addEventListener("click", toggleTheme);
 
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
@@ -262,5 +315,6 @@ function refreshHeaderAndTitle() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme();
   refreshHeaderAndTitle();
 });

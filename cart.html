@@ -4,28 +4,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Магазин — Корзина</title>
+  <title>Shopix — Корзина</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Магазин — Корзина">
+<body data-title="Shopix — Корзина">
   <header id="header"></header>
 
-  <main class="container">
-    <section class="page-head">
+  <main>
+    <div class="page-header">
       <h2>Корзина</h2>
-      <p>Управляйте количеством товаров и оформляйте заказ.</p>
-    </section>
-
-    <section id="cart-items" class="cart-list" aria-live="polite"></section>
-
-    <section id="cart-summary" class="cart-summary">
-      <p><b>Итого:</b> <span id="cart-total">0.00 $</span></p>
-      <div class="actions-row">
-        <button id="checkout-btn" class="btn btn-primary">Оформить заказ</button>
-        <a class="btn btn-ghost" href="index.html">В каталог</a>
+    </div>
+    <div class="cart-layout">
+      <div>
+        <div id="cart-empty" class="empty-state" style="display:none">
+          <i class="ti ti-shopping-cart"></i>
+          <h3>Корзина пуста</h3>
+          <p>Добавьте товары из каталога</p>
+          <button class="btn btn-primary" type="button" onclick="location.href='index.html'">В каталог</button>
+        </div>
+        <div id="cart-items"></div>
       </div>
-    </section>
+      <div class="cart-summary" id="cart-footer">
+        <h3>Итого</h3>
+        <div class="summary-row"><span>Товары</span><span id="cart-count-text">0 шт.</span></div>
+        <div class="summary-total"><span>Сумма</span><span id="cart-total">$0</span></div>
+        <button class="btn btn-primary" id="btn-checkout"
+          style="width:100%;justify-content:center;margin-top:16px">Оформить заказ</button>
+        <button class="btn btn-outline" id="btn-clear" style="width:100%;justify-content:center;margin-top:8px">Очистить
+          корзину</button>
+        <button class="btn btn-outline" type="button" onclick="location.href='index.html'"
+          style="width:100%;justify-content:center;margin-top:8px">В каталог</button>
+      </div>
+    </div>
   </main>
 
   <script src="js/models.js"></script>

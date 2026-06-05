@@ -4,35 +4,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Магазин — Главная</title>
+  <title>Shopix — Главная</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Магазин — Главная">
+<body data-title="Shopix — Главная">
   <header id="header"></header>
 
-  <main class="container">
-    <section class="page-head">
+  <main>
+    <div class="page-header">
       <h2>Каталог товаров</h2>
       <p>Поиск, фильтры, сортировка, сравнение и добавление в корзину прямо из каталога.</p>
-    </section>
+    </div>
 
-    <section class="controls" aria-label="Фильтры и сортировка">
-      <input id="search-input" type="search" placeholder="Поиск по названию..." autocomplete="off">
-      <select id="sort-select" aria-label="Сортировка">
-        <option value="default">Сортировка по умолчанию</option>
-        <option value="price-asc">Цена: по возрастанию</option>
-        <option value="price-desc">Цена: по убыванию</option>
-        <option value="title-asc">Название: А-Я</option>
-        <option value="rating-desc">Рейтинг: высокий</option>
+    <div class="catalog-controls">
+      <div class="search-input-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="search-input" placeholder="Поиск товаров...">
+      </div>
+      <select class="sort-select" id="sort-select">
+        <option value="">Сортировка</option>
+        <option value="price-asc">Цена ↑</option>
+        <option value="price-desc">Цена ↓</option>
+        <option value="rating">По рейтингу</option>
+        <option value="name">По названию</option>
       </select>
-    </section>
+    </div>
 
-    <section id="category-filters" class="pills" aria-label="Категории"></section>
-
-    <section class="compare-shortcut" id="compare-shortcut"></section>
-
-    <section id="catalog" class="catalog" aria-live="polite"></section>
+    <div id="category-filters"></div>
+    <div id="catalog" aria-live="polite"></div>
   </main>
 
   <script src="js/models.js"></script>

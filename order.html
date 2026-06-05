@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopix — Оформление заказа</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase.js"></script>
+</head>
+
+<body data-title="Shopix — Оформление заказа">
+    <header id="header"></header>
+
+    <main>
+        <div class="page-header">
+            <h2>Оформление заказа</h2>
+        </div>
+        <div class="order-layout">
+            <div>
+                <div class="form-section">
+                    <h3>Получатель</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Имя</label>
+                            <input type="text" id="order-name" class="form-input" placeholder="Иван Иванов">
+                            <span class="field-error" id="order-name-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" id="order-phone" class="form-input" placeholder="+7 900 000 00 00">
+                            <span class="field-error" id="order-phone-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:14px">
+                        <label class="form-label">Адрес доставки</label>
+                        <input type="text" id="order-address" class="form-input" placeholder="Город, улица, дом">
+                        <span class="field-error" id="order-address-error"></span>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h3>Способ оплаты</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="card" checked>
+                            <i class="ti ti-credit-card"></i> Карта
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="cash">
+                            <i class="ti ti-cash"></i> Наличные
+                        </label>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btn-order" style="width:100%;justify-content:center">Подтвердить
+                    заказ</button>
+            </div>
+            <div class="cart-summary">
+                <h3>Ваш заказ</h3>
+                <div id="order-items-summary"></div>
+                <div class="summary-total">
+                    <span>Итого</span>
+                    <span id="order-total">$0</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/models.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/order.js"></script>
+</body>
+
+</html>

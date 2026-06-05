@@ -4,61 +4,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Магазин — Вход / Регистрация</title>
+  <title>Shopix — Вход / Регистрация</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Магазин — Вход / Регистрация">
+<body data-title="Shopix — Вход / Регистрация">
   <header id="header"></header>
 
-  <main class="container">
-    <section id="auth-container" class="auth-shell">
-      <div class="tabs" role="tablist" aria-label="Вход и регистрация">
-        <button id="show-login" class="tab is-active" type="button" role="tab" aria-selected="true">Вход</button>
-        <button id="show-register" class="tab" type="button" role="tab" aria-selected="false">Регистрация</button>
+  <main>
+    <div id="auth-container">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="show-login" type="button">Вход</button>
+        <button class="auth-tab" id="show-register" type="button">Регистрация</button>
       </div>
 
-      <form id="login-form" class="auth-form" novalidate>
-        <h2>Вход</h2>
-        <label>
-          Email
-          <input name="email" type="email" autocomplete="email" required>
-          <small class="error" data-error-for="email"></small>
-        </label>
-        <label>
-          Пароль
-          <div class="password-wrap">
-            <input name="password" type="password" autocomplete="current-password" required minlength="6">
-            <button type="button" class="toggle-password" data-target="password">👁</button>
+      <div id="login-form" class="auth-form">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="you@example.com">
+          <span class="field-error" id="login-email-error"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <div class="password-wrapper">
+            <input type="password" id="login-password" class="form-input" placeholder="••••••">
+            <button type="button" class="toggle-password"><i class="ti ti-eye"></i></button>
           </div>
-          <small class="error" data-error-for="password"></small>
-        </label>
-        <button class="btn btn-primary" type="submit">Войти</button>
-      </form>
+          <span class="field-error" id="login-password-error"></span>
+        </div>
+        <button class="btn btn-primary" id="login-submit" style="width:100%;justify-content:center">Войти</button>
+      </div>
 
-      <form id="register-form" class="auth-form" novalidate hidden>
-        <h2>Регистрация</h2>
-        <label>
-          Имя
-          <input name="name" type="text" autocomplete="name" required minlength="2">
-          <small class="error" data-error-for="name"></small>
-        </label>
-        <label>
-          Email
-          <input name="email" type="email" autocomplete="email" required>
-          <small class="error" data-error-for="email"></small>
-        </label>
-        <label>
-          Пароль
-          <div class="password-wrap">
-            <input name="password" type="password" autocomplete="new-password" required minlength="6">
-            <button type="button" class="toggle-password" data-target="password">👁</button>
+      <div id="register-form" class="auth-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Имя</label>
+          <input type="text" id="reg-name" class="form-input" placeholder="Ваше имя">
+          <span class="field-error" id="reg-name-error"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="you@example.com">
+          <span class="field-error" id="reg-email-error"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <div class="password-wrapper">
+            <input type="password" id="reg-password" class="form-input" placeholder="Минимум 6 символов">
+            <button type="button" class="toggle-password"><i class="ti ti-eye"></i></button>
           </div>
-          <small class="error" data-error-for="password"></small>
-        </label>
-        <button class="btn btn-primary" type="submit">Зарегистрироваться</button>
-      </form>
-    </section>
+          <span class="field-error" id="reg-password-error"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Повторите пароль</label>
+          <input type="password" id="reg-confirm" class="form-input" placeholder="••••••">
+          <span class="field-error" id="reg-confirm-error"></span>
+        </div>
+        <button class="btn btn-primary" id="reg-submit"
+          style="width:100%;justify-content:center">Зарегистрироваться</button>
+      </div>
+    </div>
   </main>
 
   <script src="js/models.js"></script>

@@ -4,20 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин — Избранное</title>
+    <title>Shopix — Избранное</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Магазин — Избранное">
+<body data-title="Shopix — Избранное">
     <header id="header"></header>
 
-    <main class="container">
-        <section class="page-head">
+    <main>
+        <div class="page-header">
             <h2>Избранное</h2>
             <p>Товары, которые вы отметили сердечком.</p>
-        </section>
-
-        <section id="wishlist-items" class="catalog" aria-live="polite"></section>
+        </div>
+        <div id="wishlist-items" class="catalog" aria-live="polite"></div>
     </main>
 
     <script src="js/models.js"></script>

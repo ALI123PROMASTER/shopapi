@@ -4,17 +4,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Магазин — Товар</title>
+  <title>Shopix — Товар</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
 </head>
 
-<body data-title="Магазин — Товар">
+<body data-title="Shopix — Товар">
   <header id="header"></header>
 
-  <main class="container">
-    <nav id="breadcrumbs" class="breadcrumbs" aria-label="Хлебные крошки"></nav>
-    <section id="product-details" aria-live="polite"></section>
-    <section id="recently-viewed" class="recently-viewed"></section>
+  <main>
+    <div id="product-details"></div>
+    <div id="recently-viewed"></div>
   </main>
 
   <script src="js/models.js"></script>
