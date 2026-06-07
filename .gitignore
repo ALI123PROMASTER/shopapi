@@ -1,3 +1,6 @@
 technical_specifications-3.md
 design_polish_prompt.md
 спецификации.md
+backend/node_modules/
+backend/.env
+backend/package-lock.json

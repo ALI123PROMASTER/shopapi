@@ -87,61 +87,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     .map(createSkeletonCard)
     .join("");
 
-  try {
-    state.products = (await getProducts()).map((item) => new Product(item));
-    const categories = await getCategories();
-    const user = getCurrentUser();
-    if (user) {
-      const items = await getWishlist(user.email);
-      state.wishlistIds = items.map((item) => Number(item.id));
-    }
-    renderCategoryFilters(categories, state.category);
-
-    function applyState() {
-      const filtered = state.products
-        .filter(
-          (item) =>
-            state.category === "all" || item.category === state.category,
-        )
-        .filter((item) =>
-          item.title.toLowerCase().includes(state.query.toLowerCase()),
-        );
-
-      const sorted = sortProducts(filtered, state.sort);
-      if (!sorted.length) {
-        catalogRoot.innerHTML = `<div class="placeholder">Ничего не найдено.</div>`;
-        return;
+    try {
+      state.products = (await getProducts()).map((item) => new Product(item));
+      const categories = await getCategories();
+      const user = getCurrentUser();
+      if (user) {
+        state.wishlistIds = await getWishlistIds();
       }
-
-      catalogRoot.innerHTML = sorted
-        .map((product) =>
-          createProductCard(product, state.wishlistIds.includes(product.id)),
-        )
-        .join("");
-    }
-
-    applyState();
-
-    searchInput?.addEventListener("input", (event) => {
-      state.query = event.target.value.trim();
+      renderCategoryFilters(categories, state.category);
+    
+      function applyState() {
+        const filtered = state.products
+          .filter(
+            (item) =>
+              state.category === "all" || item.category === state.category,
+          )
+          .filter((item) =>
+            item.title.toLowerCase().includes(state.query.toLowerCase()),
+          );
+  
+        const sorted = sortProducts(filtered, state.sort);
+        if (!sorted.length) {
+          catalogRoot.innerHTML = `<div class="placeholder">Ничего не найдено.</div>`;
+          return;
+        }
+  
+        catalogRoot.innerHTML = sorted
+          .map((product) =>
+            createProductCard(product, state.wishlistIds.includes(product.id)),
+          )
+          .join("");
+      }
+  
       applyState();
-    });
-
-    sortSelect?.addEventListener("change", (event) => {
-      state.sort = event.target.value;
-      applyState();
-    });
-
-    categoriesRoot?.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-category]");
-      if (!button) return;
-      state.category = button.dataset.category;
-      categoriesRoot
-        .querySelectorAll(".filter-pill")
-        .forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      applyState();
-    });
+  
+      searchInput?.addEventListener("input", (event) => {
+        state.query = event.target.value.trim();
+        applyState();
+      });
+  
+      sortSelect?.addEventListener("change", (event) => {
+        state.sort = event.target.value;
+        applyState();
+      });
+  
+      categoriesRoot?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-category]");
+        if (!button) return;
+        state.category = button.dataset.category;
+        categoriesRoot
+          .querySelectorAll(".filter-pill")
+          .forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        applyState();
+      });
 
     catalogRoot.addEventListener("click", async (event) => {
       const addButton = event.target.closest(".btn-add");
@@ -152,8 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (addButton) {
         event.stopPropagation();
         const productId = Number(addButton.dataset.id);
-        getCartInstance().addItem(productId);
-        updateCartCount();
+        await addToCart(productId);
         showToast("Добавлено в корзину!", "success");
         return;
       }
@@ -166,18 +164,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const productId = Number(wishButton.dataset.id);
-        const product = state.products.find((item) => item.id === productId);
-        const active = state.wishlistIds.includes(productId);
-        if (active) {
-          await fbRemoveFromWishlist(user.email, productId);
-          state.wishlistIds = state.wishlistIds.filter(
-            (item) => item !== productId,
-          );
-          showToast("Удалено из избранного", "success");
-        } else if (product) {
-          await fbAddToWishlist(user.email, product);
+        const isActive = await toggleWishlist(productId);
+        
+        if (isActive) {
           state.wishlistIds.push(productId);
           showToast("Добавлено в избранное", "success");
+        } else {
+          state.wishlistIds = state.wishlistIds.filter(id => id !== productId);
+          showToast("Удалено из избранного", "success");
         }
         applyState();
         return;

@@ -1,5 +1,5 @@
-function compareRow(label, renderCell) {
-  const ids = getCompareList();
+async function compareRow(label, renderCell) {
+  const ids = await getCompareList();
   return `
     <tr>
       <th>${label}</th>
@@ -12,7 +12,7 @@ async function renderComparePage() {
   const root = document.getElementById("compare-content");
   if (!root) return;
 
-  const ids = getCompareList();
+  const ids = await getCompareList();
   if (ids.length < 2) {
     root.innerHTML = `
       <div class="placeholder">
@@ -31,6 +31,27 @@ async function renderComparePage() {
     products.map((product) => [product.id, product]),
   );
 
+  // Генерируем строки таблицы
+  const rowsHtml = [
+    { label: "Товар", render: (id) => byId[id] ? `<a href="product.html?id=${byId[id].id}">${escapeHtml(byId[id].title)}</a>` : "-" },
+    { label: "Фото", render: (id) => byId[id] ? `<img src="${escapeHtml(byId[id].image)}" alt="${escapeHtml(byId[id].title)}">` : "-" },
+    { label: "Категория", render: (id) => escapeHtml(byId[id]?.category || "-") },
+    { label: "Цена", render: (id) => formatPrice(byId[id]?.price || 0) },
+    { label: "Рейтинг", render: (id) => byId[id] ? renderStars(byId[id].rating?.rate, byId[id].rating?.count) : "-" },
+    { label: "Описание", render: (id) => escapeHtml(byId[id]?.description || "-") },
+    { label: "Действия", render: (id) => byId[id] ? `
+      <div class="actions-row">
+        <button class="btn btn-primary" type="button" data-action="add" data-product-id="${byId[id].id}">В корзину</button>
+        <button class="btn btn-ghost" type="button" data-action="remove" data-product-id="${byId[id].id}">Убрать</button>
+      </div>
+    ` : "-" }
+  ].map(row => `
+    <tr>
+      <th>${row.label}</th>
+      ${ids.map(id => `<td>${row.render(id)}</td>`).join("")}
+    </tr>
+  `).join("");
+
   root.innerHTML = `
     <div class="actions-row" style="margin-bottom:0.8rem;">
       <button id="clear-compare" class="btn btn-danger" type="button">Очистить сравнение</button>
@@ -38,42 +59,19 @@ async function renderComparePage() {
     <div class="compare-table-wrap">
       <table class="compare-table">
         <tbody>
-          ${compareRow("Товар", (id) => {
-            const product = byId[id];
-            if (!product) return "-";
-            return `<a href="product.html?id=${product.id}">${escapeHtml(product.title)}</a>`;
-          })}
-          ${compareRow("Фото", (id) => {
-            const product = byId[id];
-            if (!product) return "-";
-            return `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.title)}">`;
-          })}
-          ${compareRow("Категория", (id) => escapeHtml(byId[id]?.category || "-"))}
-          ${compareRow("Цена", (id) => formatPrice(byId[id]?.price || 0))}
-          ${compareRow("Рейтинг", (id) => {
-            const p = byId[id];
-            return p ? renderStars(p.rating?.rate, p.rating?.count) : "-";
-          })}
-          ${compareRow("Описание", (id) => escapeHtml(byId[id]?.description || "-"))}
-          ${compareRow("Действия", (id) => {
-            const p = byId[id];
-            if (!p) return "-";
-            return `
-              <div class="actions-row">
-                <button class="btn btn-primary" type="button" data-action="add" data-product-id="${p.id}">В корзину</button>
-                <button class="btn btn-ghost" type="button" data-action="remove" data-product-id="${p.id}">Убрать</button>
-              </div>
-            `;
-          })}
+          ${rowsHtml}
         </tbody>
       </table>
     </div>
   `;
 
-  document.getElementById("clear-compare")?.addEventListener("click", () => {
-    saveCompareList([]);
+  document.getElementById("clear-compare")?.addEventListener("click", async () => {
+    const currentIds = await getCompareList();
+    for (const id of currentIds) {
+      await toggleCompare(id);
+    }
     showToast("Сравнение очищено", "success");
-    renderComparePage();
+    await renderComparePage();
   });
 }
 
@@ -82,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document
     .getElementById("compare-content")
-    ?.addEventListener("click", (event) => {
+    ?.addEventListener("click", async (event) => {
       const button = event.target.closest("button[data-action]");
       if (!button) return;
 
@@ -90,16 +88,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const action = button.dataset.action;
 
       if (action === "add") {
-        addToCart(productId, 1);
+        await addToCart(productId, 1);
         showToast("Товар добавлен в корзину", "success");
         return;
       }
 
       if (action === "remove") {
-        const ids = getCompareList().filter((id) => Number(id) !== productId);
-        saveCompareList(ids);
+        await toggleCompare(productId);
         showToast("Товар удален из сравнения", "success");
-        renderComparePage();
+        await renderComparePage();
       }
     });
 });

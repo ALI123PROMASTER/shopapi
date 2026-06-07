@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   regConfirm.addEventListener("input", validateRegisterConfirm);
 
-  document.getElementById("login-submit").addEventListener("click", () => {
+  document.getElementById("login-submit").addEventListener("click", async () => {
     const email = loginEmail.value.trim().toLowerCase();
     const password = loginPassword.value;
 
@@ -169,30 +169,42 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const users = getUsers();
-    const found = users.find(
-      (user) => user.email === email && user.password === password,
-    );
-    if (!found) {
-      showToast("Неверный email или пароль", "error");
-      setFieldState(
-        loginPassword,
-        document.getElementById("login-password-error"),
-        false,
-        "Неверный email или пароль",
-      );
-      return;
-    }
+    const loginUrl = "http://10.10.10.14:3000/api/auth/login";
+    
+    try {
+      const response = await fetch(loginUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ login: email, password: password }),
+      });
 
-    setCurrentUser(found);
-    showToast("Добро пожаловать!", "success");
-    refreshHeaderAndTitle();
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 600);
+      const data = await response.json();
+
+      if (!response.ok) {
+        showToast(data.error || "Ошибка входа", "error");
+        setFieldState(
+          loginPassword,
+          document.getElementById("login-password-error"),
+          false,
+          data.error || "Неверный логин или пароль",
+        );
+        return;
+      }
+
+      // Если логин успешен, сохраняем пользователя (id и login)
+      setCurrentUser({ id: data.id, login: data.login, name: data.login, email: data.login });
+      showToast("Добро пожаловать!", "success");
+      refreshHeaderAndTitle();
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 600);
+    } catch (error) {
+      console.error("Login error:", error);
+      showToast("Ошибка подключения к серверу", "error");
+    }
   });
 
-  document.getElementById("reg-submit").addEventListener("click", () => {
+  document.getElementById("reg-submit").addEventListener("click", async () => {
     const name = regName.value.trim();
     const email = regEmail.value.trim().toLowerCase();
     const password = regPassword.value;
@@ -203,56 +215,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const passwordOk = validatePassword(password);
     const confirmOk = confirm === password;
 
-    setFieldState(
-      regName,
-      document.getElementById("reg-name-error"),
-      nameOk,
-      "Минимум 2 символа",
-    );
-    setFieldState(
-      regEmail,
-      document.getElementById("reg-email-error"),
-      emailOk,
-      "Введите корректный email",
-    );
-    setFieldState(
-      regPassword,
-      document.getElementById("reg-password-error"),
-      passwordOk,
-      "Минимум 6 символов",
-    );
-    setFieldState(
-      regConfirm,
-      document.getElementById("reg-confirm-error"),
-      confirmOk,
-      "Пароли не совпадают",
-    );
+    // ... (валидация полей остается прежней) ...
+    setFieldState(regName, document.getElementById("reg-name-error"), nameOk, "Минимум 2 символа");
+    setFieldState(regEmail, document.getElementById("reg-email-error"), emailOk, "Введите корректный email");
+    setFieldState(regPassword, document.getElementById("reg-password-error"), passwordOk, "Минимум 6 символов");
+    setFieldState(regConfirm, document.getElementById("reg-confirm-error"), confirmOk, "Пароли не совпадают");
 
     if (!nameOk || !emailOk || !passwordOk || !confirmOk) {
       showToast("Проверьте поля формы", "error");
       return;
     }
 
-    const users = getUsers();
-    if (users.some((user) => user.email === email)) {
-      setFieldState(
-        regEmail,
-        document.getElementById("reg-email-error"),
-        false,
-        "Пользователь уже существует",
-      );
-      showToast("Пользователь с таким email уже есть", "error");
-      return;
-    }
+    const regUrl = "http://10.10.10.14:3000/api/auth/register";
+    try {
+      const response = await fetch(regUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ login: email, password: password }),
+      });
 
-    const created = new User(name, email, password);
-    users.push(created);
-    saveUsers(users);
-    setCurrentUser(created);
-    showToast("Регистрация успешна!", "success");
-    refreshHeaderAndTitle();
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 1000);
+      const data = await response.json();
+
+      if (!response.ok) {
+        showToast(data.error || "Ошибка регистрации", "error");
+        return;
+      }
+
+      setCurrentUser({ id: data.id, login: data.login, name: data.login, email: data.login });
+      showToast("Регистрация успешна!", "success");
+      refreshHeaderAndTitle();
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1000);
+    } catch (error) {
+      console.error("Register error:", error);
+      showToast("Ошибка подключения к серверу", "error");
+    }
   });
 });

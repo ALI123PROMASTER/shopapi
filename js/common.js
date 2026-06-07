@@ -55,13 +55,23 @@ function logoutUser() {
   localStorage.removeItem(CURRENT_USER_KEY);
 }
 
-function getCartInstance() {
+async function getCartInstance() {
   const user = getCurrentUser();
-  return new Cart(user ? user.email : "guest");
+  const cart = new Cart(user ? user.id : "guest");
+  
+  // Если пользователь залогинен, синхронизируем с БД
+  if (user && user.id) {
+    const dbItems = await apiGetCart(user.id);
+    if (dbItems) {
+      cart.items = dbItems.map(item => new CartItem(item.product_id, item.quantity));
+      cart.save(); // Обновляем локальное хранилище для оффлайн-просмотра
+    }
+  }
+  return cart;
 }
 
-function updateCartCount() {
-  const cart = getCartInstance();
+async function updateCartCount() {
+  const cart = await getCartInstance();
   const badge = document.getElementById("cart-count");
   if (badge) badge.textContent = cart.getCount();
   const baseTitle = document.body?.dataset?.title || "Shopix";
@@ -114,10 +124,6 @@ function saveCartItems(items) {
   writeJson(getScopedKey("cart"), items);
 }
 
-function getCompareList() {
-  return readJson(getScopedKey("compare"), []);
-}
-
 function saveCompareList(ids) {
   writeJson(getScopedKey("compare"), ids);
 }
@@ -130,77 +136,39 @@ function saveRecentViewed(ids) {
   writeJson(getScopedKey("recent"), ids);
 }
 
-function getWishlistIds() {
-  return readJson(getScopedKey("wishlist"), []);
-}
-
 function saveWishlistIds(ids) {
   writeJson(getScopedKey("wishlist"), ids);
 }
 
-function toggleWishlistId(productId) {
-  const id = Number(productId);
-  const current = getWishlistIds();
-  const exists = current.includes(id);
-  const next = exists
-    ? current.filter((item) => item !== id)
-    : [...current, id];
-  saveWishlistIds(next);
-  return !exists;
-}
-
-function getCartCount() {
-  return getCartInstance().getCount();
-}
-
-function addToCart(productId, quantity = 1) {
-  const cart = getCartInstance();
-  cart.addItem(Number(productId), Number(quantity || 1));
-  updateCartCount();
-}
-
-function setCartQuantity(productId, quantity) {
-  const cart = getCartInstance();
-  cart.updateQty(Number(productId), Number(quantity));
-  updateCartCount();
-}
-
-function removeFromCart(productId) {
-  const cart = getCartInstance();
-  cart.removeItem(Number(productId));
-  updateCartCount();
-}
-
-function isInWishlist(productId) {
-  return getWishlistIds().includes(Number(productId));
-}
-
-function toggleWishlist(productId) {
-  return toggleWishlistId(productId);
-}
-
-function isInCompare(productId) {
-  return getCompareList().includes(Number(productId));
-}
-
-function toggleCompare(productId) {
-  const id = Number(productId);
-  const current = getCompareList();
-  const exists = current.includes(id);
-
-  if (exists) {
-    const next = current.filter((item) => item !== id);
-    saveCompareList(next);
-    return { active: false, limitReached: false };
+async function setCartQuantity(productId, quantity) {
+  const user = getCurrentUser();
+  if (user && user.id) {
+    await apiAddToCart(user.id, productId, quantity - (await getCartQuantityLocal(productId)));
+  } else {
+    const cart = await getCartInstance();
+    cart.updateQty(Number(productId), Number(quantity));
   }
+  await updateCartCount();
+}
 
-  if (current.length >= 3) {
-    return { active: false, limitReached: true };
-  }
+async function getCartQuantityLocal(productId) {
+  const cart = await getCartInstance();
+  const item = cart.items.find(i => i.productId === Number(productId));
+  return item ? item.quantity : 0;
+}
 
-  const next = [...current, id];
-  saveCompareList(next);
-  return { active: true, limitReached: false };
+async function isInWishlist(productId) {
+  const list = await getWishlistIds();
+  return list.includes(Number(productId));
+}
+
+async function toggleWishlist(productId) {
+  return await toggleWishlistId(productId);
+}
+
+async function isInCompare(productId) {
+  const list = await getCompareList();
+  return list.includes(Number(productId));
 }
 
 function pushRecentViewed(productId) {
@@ -229,8 +197,8 @@ function markActiveLink() {
   });
 }
 
-function updateDocumentTitleCount() {
-  updateCartCount();
+async function updateDocumentTitleCount() {
+  await updateCartCount();
 }
 
 function getToastRoot() {
@@ -260,12 +228,108 @@ function showToast(message, type = "success") {
   }, 3000);
 }
 
-function renderHeader() {
+async function getWishlistIds() {
+  const user = getCurrentUser();
+  if (user && user.id) {
+    const items = await apiGetFavorites(user.id);
+    return items ? items.map(i => Number(i.product_id)) : [];
+  }
+  return readJson(getScopedKey("wishlist"), []);
+}
+
+async function toggleWishlistId(productId) {
+  const user = getCurrentUser();
+  const id = Number(productId);
+  
+  if (user && user.id) {
+    const current = await getWishlistIds();
+    const exists = current.includes(id);
+    if (exists) {
+      await apiRemoveFromFavorites(user.id, id);
+    } else {
+      await apiAddToFavorites(user.id, id);
+    }
+    return !exists;
+  }
+
+  const current = await getWishlistIds();
+  const exists = current.includes(id);
+  const next = exists
+    ? current.filter((item) => item !== id)
+    : [...current, id];
+  saveWishlistIds(next);
+  return !exists;
+}
+
+async function getCompareList() {
+  const user = getCurrentUser();
+  if (user && user.id) {
+    const items = await apiGetCompare(user.id);
+    return items ? items.map(i => Number(i.product_id)) : [];
+  }
+  return readJson(getScopedKey("compare"), []);
+}
+
+async function toggleCompare(productId) {
+  const user = getCurrentUser();
+  const id = Number(productId);
+  const current = await getCompareList();
+  const exists = current.includes(id);
+
+  if (exists) {
+    if (user && user.id) {
+      await apiRemoveFromCompare(user.id, id);
+    } else {
+      const next = current.filter((item) => item !== id);
+      saveCompareList(next);
+    }
+    return { active: false, limitReached: false };
+  }
+
+  if (current.length >= 3) {
+    return { active: false, limitReached: true };
+  }
+
+  if (user && user.id) {
+    await apiAddToCompare(user.id, id);
+  } else {
+    const next = [...current, id];
+    saveCompareList(next);
+  }
+  return { active: true, limitReached: false };
+}
+
+async function addToCart(productId, quantity = 1) {
+  const user = getCurrentUser();
+  if (user && user.id) {
+    await apiAddToCart(user.id, productId, quantity);
+  } else {
+    const cart = await getCartInstance();
+    cart.addItem(Number(productId), Number(quantity || 1));
+  }
+  await updateCartCount();
+}
+
+async function removeFromCart(productId) {
+  const user = getCurrentUser();
+  if (user && user.id) {
+    await apiRemoveFromCart(user.id, productId);
+  } else {
+    const cart = await getCartInstance();
+    cart.removeItem(Number(productId));
+  }
+  await updateCartCount();
+}
+
+async function renderHeader() {
   const header = document.getElementById("header");
   if (!header) return;
 
   const user = getCurrentUser();
-  const cartCount = getCartCount();
+  
+  // Мы не можем ждать вечно, поэтому получим количество из локального кеша или быстрого запроса
+  const cart = await getCartInstance();
+  const cartCount = cart.getCount();
 
   header.innerHTML = `
     <div class="header-inner">
@@ -281,7 +345,7 @@ function renderHeader() {
         <button class="btn btn-ghost btn-theme" id="theme-toggle" type="button" aria-label="Переключить тему"><i id="theme-icon" class="ti ti-sun"></i></button>
         ${
           user
-            ? `<a class="user-box" href="profile.html">${getAvatar(user.name || user.email)}<span>${escapeHtml(user.name || user.email)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
+            ? `<a class="user-box" href="profile.html">${getAvatar(user.name || user.login)}<span>${escapeHtml(user.name || user.login)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
             : `<a class="btn btn-ghost" data-page="auth.html" href="auth.html">Вход / Регистрация</a>`
         }
       </div>
@@ -309,12 +373,12 @@ function renderHeader() {
   }
 }
 
-function refreshHeaderAndTitle() {
-  renderHeader();
-  updateDocumentTitleCount();
+async function refreshHeaderAndTitle() {
+  await renderHeader();
+  await updateCartCount();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   applyTheme();
-  refreshHeaderAndTitle();
+  await refreshHeaderAndTitle();
 });

@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   applyTheme();
 
-  const cart = getCartInstance();
+  const cart = await getCartInstance();
   if (!cart.items.length) {
     window.location.href = "cart.html";
     return;
@@ -73,21 +73,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   submitButton.addEventListener("click", async () => {
     if (!validate()) return;
 
-    const payment =
-      document.querySelector('input[name="payment"]:checked')?.value || "card";
-    const email = user ? user.email : "guest";
-
-    await fbSaveOrder(email, {
-      items: rows,
-      total,
-      name: nameInput.value.trim(),
-      address: addressInput.value.trim(),
-      phone: phoneInput.value.trim(),
-      payment,
-    });
-
-    cart.clear();
-    updateCartCount();
+    if (user && user.id) {
+      const currentCart = await getCartInstance();
+      for (const item of currentCart.items) {
+        await removeFromCart(item.productId);
+      }
+    } else {
+      cart.clear();
+    }
+    
+    await updateCartCount();
     showToast("Заказ оформлен! 🎉", "success");
     setTimeout(() => {
       window.location.href = "index.html";

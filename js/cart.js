@@ -1,5 +1,5 @@
 async function renderCart() {
-  const cart = getCartInstance();
+  const cart = await getCartInstance();
   const cartRoot = document.getElementById("cart-items");
   const emptyRoot = document.getElementById("cart-empty");
   const footer = document.getElementById("cart-footer");
@@ -13,7 +13,7 @@ async function renderCart() {
     footer.style.display = "none";
     totalRoot.textContent = "$0";
     countRoot.textContent = "0 шт.";
-    updateCartCount();
+    await updateCartCount();
     return;
   }
 
@@ -60,10 +60,10 @@ async function renderCart() {
 
   totalRoot.textContent = `$${total.toFixed(2)}`;
   countRoot.textContent = `${count} шт.`;
-  updateCartCount();
+  await updateCartCount();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   applyTheme();
 
   const cartRoot = document.getElementById("cart-items");
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearBtn = document.getElementById("btn-clear");
   if (!cartRoot) return;
 
-  renderCart();
+  await renderCart();
 
   cartRoot.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-action]");
@@ -79,18 +79,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const action = button.dataset.action;
     const productId = Number(button.dataset.productId);
-    const cart = getCartInstance();
-    const current = cart.items.find((item) => item.productId === productId);
-    if (!current) return;
 
     if (action === "increase") {
-      cart.updateQty(productId, current.quantity + 1);
+      await addToCart(productId, 1);
       await renderCart();
       return;
     }
 
     if (action === "decrease") {
-      cart.updateQty(productId, current.quantity - 1);
+      await addToCart(productId, -1);
       await renderCart();
       return;
     }
@@ -100,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!row) return;
       row.classList.add("removing");
       setTimeout(async () => {
-        cart.removeItem(productId);
+        await removeFromCart(productId);
         await renderCart();
       }, 300);
     }
@@ -111,12 +108,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input) return;
     const productId = Number(input.dataset.productId);
     const value = Number(input.value || 1);
-    getCartInstance().updateQty(productId, value);
+    await setCartQuantity(productId, value);
     await renderCart();
   });
 
-  checkoutBtn?.addEventListener("click", () => {
-    if (!getCartInstance().items.length) {
+  checkoutBtn?.addEventListener("click", async () => {
+    const cart = await getCartInstance();
+    if (!cart.items.length) {
       showToast("Корзина пуста", "error");
       return;
     }
@@ -124,7 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   clearBtn?.addEventListener("click", async () => {
-    getCartInstance().clear();
+    const cart = await getCartInstance();
+    // Очистка через API (нужно добавить эндпоинт или просто удалять всё)
+    for (const item of cart.items) {
+      await removeFromCart(item.productId);
+    }
     showToast("Корзина очищена", "success");
     await renderCart();
   });
