@@ -52,7 +52,7 @@ function createProductCard(product, inWishlist) {
       <div class="card-body">
         <div class="card-category">${escapeHtml(product.category)}</div>
         <div class="card-title">${escapeHtml(product.title)}</div>
-        <div><span class="card-stars">${product.getStars()}</span><span class="card-reviews">(${product.rating?.count || 0})</span></div>
+        <div class="card-stars">${product.getStars()} <span class="card-reviews">(${product.rating?.count || 0})</span></div>
         <div class="card-footer">
           <div class="card-price">$${Number(product.price || 0).toFixed(2)}</div>
           <button class="btn-add" data-id="${product.id}" type="button" aria-label="Добавить в корзину">
@@ -146,9 +146,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     catalogRoot.addEventListener("click", async (event) => {
       const addButton = event.target.closest(".btn-add");
       const wishButton = event.target.closest(".wish-btn");
+      const card = event.target.closest(".card");
       const user = getCurrentUser();
 
       if (addButton) {
+        event.stopPropagation();
         const productId = Number(addButton.dataset.id);
         getCartInstance().addItem(productId);
         updateCartCount();
@@ -157,6 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       if (wishButton) {
+        event.stopPropagation();
         if (!user) {
           showToast("Войдите, чтобы добавить в избранное", "info");
           return;
@@ -177,6 +180,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           showToast("Добавлено в избранное", "success");
         }
         applyState();
+        return;
+      }
+
+      if (card && card.dataset.productId) {
+        window.location.href = `product.html?id=${card.dataset.productId}`;
       }
     });
   } catch (error) {

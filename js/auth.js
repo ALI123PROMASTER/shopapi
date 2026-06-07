@@ -36,12 +36,21 @@ function setActiveTab(loginVisible) {
   document
     .getElementById("show-register")
     ?.classList.toggle("active", !loginVisible);
-  document.getElementById("login-form").style.display = loginVisible
-    ? "flex"
-    : "none";
-  document.getElementById("register-form").style.display = loginVisible
-    ? "none"
-    : "flex";
+
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+  
+  if (loginForm && registerForm) {
+    loginForm.style.display = loginVisible ? "flex" : "none";
+    registerForm.style.display = loginVisible ? "none" : "flex";
+  }
+
+  const title = document.querySelector(".auth-header h2");
+  const p = document.querySelector(".auth-header p");
+  if (title && p) {
+    title.textContent = loginVisible ? "Добро пожаловать" : "Регистрация";
+    p.textContent = loginVisible ? "Войдите в аккаунт или создайте новый" : "Станьте частью нашего сообщества";
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

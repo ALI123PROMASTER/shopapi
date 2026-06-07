@@ -50,7 +50,7 @@ async function renderCart() {
             <button class="qty-btn" type="button" data-action="increase" data-product-id="${product.id}">+</button>
           </div>
           <div class="cart-row-subtotal">$${(Number(product.price || 0) * quantity).toFixed(2)}</div>
-          <button class="btn-icon" type="button" data-action="remove" data-product-id="${product.id}" aria-label="Удалить">
+          <button class="icon-btn" type="button" data-action="remove" data-product-id="${product.id}" aria-label="Удалить">
             <i class="ti ti-trash"></i>
           </button>
         </article>

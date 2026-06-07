@@ -41,11 +41,11 @@ function renderProductView(product) {
         <p class="product-desc">${escapeHtml(product.description)}</p>
         <div class="product-actions">
           <button class="btn btn-primary" id="add-to-cart" type="button"><i class="ti ti-shopping-bag"></i> В корзину</button>
-          <button class="btn-icon wish-btn ${inWishlist ? "active" : ""}" id="add-to-wish" type="button"><i class="ti ti-heart"></i></button>
+          <button class="icon-btn wish-btn ${inWishlist ? "active" : ""}" id="add-to-wish" type="button"><i class="ti ti-heart"></i></button>
         </div>
-        <div class="product-nav">
-          <button class="btn btn-outline" id="to-catalog" type="button"><i class="ti ti-arrow-left"></i> В каталог</button>
-          <button class="btn btn-outline" id="to-cart" type="button">Корзина <i class="ti ti-arrow-right"></i></button>
+        <div class="product-nav" style="display:flex; gap:12px; margin-top:24px;">
+          <button class="btn btn-outline" id="to-catalog" type="button"><i class="ti ti-arrow-left"></i> Назад</button>
+          <button class="btn btn-outline" id="to-cart" type="button">В корзину <i class="ti ti-arrow-right"></i></button>
         </div>
       </div>
     </div>
