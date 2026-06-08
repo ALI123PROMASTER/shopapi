@@ -1,9 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const db = require('./db');
-require('dotenv').config();
 const path = require('path');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -183,6 +183,11 @@ app.delete('/api/compare', async (req, res) => {
   } catch (err) {
     res.status(500).send(err.message);
   }
+});
+
+// Fallback for SPA routes – serve main page for any unknown path
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'))
 });
 
 app.listen(PORT, () => {

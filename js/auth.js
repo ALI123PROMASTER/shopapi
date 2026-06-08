@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme();
 
   if (getCurrentUser()) {
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
     return;
   }
 
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const loginUrl = "http://10.10.10.14:3000/api/auth/login";
+    const loginUrl = "/api/auth/login";
     
     try {
       const response = await fetch(loginUrl, {
@@ -196,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Добро пожаловать!", "success");
       refreshHeaderAndTitle();
       setTimeout(() => {
-        window.location.href = "index.html";
+        window.location.href = "/index.html";
       }, 600);
     } catch (error) {
       console.error("Login error:", error);
@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const regUrl = "http://10.10.10.14:3000/api/auth/register";
+    const regUrl = "/api/auth/register";
     try {
       const response = await fetch(regUrl, {
         method: "POST",
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Регистрация успешна!", "success");
       refreshHeaderAndTitle();
       setTimeout(() => {
-        window.location.href = "index.html";
+        window.location.href = "/index.html";
       }, 1000);
     } catch (error) {
       console.error("Register error:", error);

@@ -27,8 +27,15 @@ const pool = new Pool({
 });
 
 // Проверка подключения
-pool.on('connect', () => {
+pool.on('connect', async () => {
   console.log('✅ Подключено к PostgreSQL');
+  // Удаляем внешний ключ, который ссылается на несуществующую таблицу products
+  try {
+    await pool.query('ALTER TABLE IF EXISTS cart DROP CONSTRAINT IF EXISTS cart_product_id_fkey');
+    console.log('🛠️ Удалён внешний ключ cart_product_id_fkey (если он был)');
+  } catch (e) {
+    console.error('⚠️ Ошибка при удалении внешнего ключа:', e.message);
+  }
 });
 
 pool.on('error', (err) => {

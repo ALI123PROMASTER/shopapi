@@ -15,7 +15,7 @@ async function renderWishlist() {
         <i class="ti ti-heart-off"></i>
         <h3>Избранное пока пусто</h3>
         <p>Нажмите на сердечко в каталоге, чтобы добавить товар.</p>
-        <button class="btn btn-primary" type="button" onclick="location.href='index.html'">Перейти в каталог</button>
+        <button class="btn btn-primary" type="button" onclick="location.href='/index.html'">Перейти в каталог</button>
       </div>
     `;
     return;

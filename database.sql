@@ -14,6 +14,8 @@ CREATE TABLE cart (
     product_id INTEGER NOT NULL,
     quantity INTEGER DEFAULT 1
 );
+-- Index to speed up lookups by user and product
+CREATE INDEX idx_cart_user_product ON cart (user_id, product_id);
 
 -- Таблица избранного
 CREATE TABLE favorites (
