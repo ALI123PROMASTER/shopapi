@@ -3,26 +3,31 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-/* Добавляем в начало server.js (после объявлений const) */
-const path = require('path');
 
-/* Заменяем обработчик app.get('/') и добавляем раздачу статики */
-app.use(express.static(path.join(__dirname, '../'))); // Раздаем все файлы из основной папки
+// Middleware — должен быть ДО static и маршрутов
+app.use(cors());
+app.use(express.json());
 
+// Раздаём статику (HTML, CSS, JS, изображения) из корня проекта
+app.use(express.static(path.join(__dirname, '../')));
+
+// Главная страница
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
-app.use(cors());
-app.use(express.json());
-
-// Главная страница для проверки работы сервера
-app.get('/', (req, res) => {
-  res.send('API сервер интернет-магазина запущен и работает. Используйте эндпоинты /api/...');
+// Алиасы: /cart.html → /pages/cart.html (и т.д.)
+const pageAliases = ['cart', 'wishlist', 'compare', 'profile', 'auth', 'product', 'order'];
+pageAliases.forEach(page => {
+  app.get(`/${page}.html`, (req, res) => {
+    res.sendFile(path.join(__dirname, `../pages/${page}.html`));
+  });
 });
+
 // --- АУТЕНТИФИКАЦИЯ ---
 
 // Регистрация (добавлена для удобства)

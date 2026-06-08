@@ -188,6 +188,8 @@ function getAvatarColor(seedText) {
   return `hsl(${hue} 74% 45%)`;
 }
 
+function getBasePath(){return location.pathname.includes('/pages/')?"../":"";}
+
 function markActiveLink() {
   const page = window.location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll(".main-nav a[data-page]").forEach((link) => {
@@ -240,7 +242,7 @@ async function getWishlistIds() {
 async function toggleWishlistId(productId) {
   const user = getCurrentUser();
   const id = Number(productId);
-  
+
   if (user && user.id) {
     const current = await getWishlistIds();
     const exists = current.includes(id);
@@ -326,27 +328,26 @@ async function renderHeader() {
   if (!header) return;
 
   const user = getCurrentUser();
-  
-  // Мы не можем ждать вечно, поэтому получим количество из локального кеша или быстрого запроса
+
   const cart = await getCartInstance();
   const cartCount = cart.getCount();
-
+  const basePath = getBasePath();
   header.innerHTML = `
     <div class="header-inner">
-      <a class="brand" href="index.html">Shopi<span class="logo-accent">x</span></a>
+      <a class="brand" href="/index.html">Shopi<span class="logo-accent">x</span></a>
       <nav class="main-nav">
-        <a data-page="index.html" href="index.html">Главная</a>
-        <a data-page="wishlist.html" href="wishlist.html">Избранное</a>
-        <a data-page="compare.html" href="compare.html">Сравнение</a>
-        <a data-page="cart.html" href="cart.html">Корзина <span id="cart-count" class="cart-badge">${cartCount}</span></a>
-        <a data-page="profile.html" href="profile.html">Профиль</a>
+        <a data-page="index.html" href="/index.html">Главная</a>
+        <a data-page="wishlist.html" href="/pages/wishlist.html">Избранное</a>
+        <a data-page="compare.html" href="/pages/compare.html">Сравнение</a>
+        <a data-page="cart.html" href="/pages/cart.html">Корзина <span id="cart-count" class="cart-badge">${cartCount}</span></a>
+        <a data-page="profile.html" href="/pages/profile.html">Профиль</a>
       </nav>
       <div class="header-actions">
         <button class="btn btn-ghost btn-theme" id="theme-toggle" type="button" aria-label="Переключить тему"><i id="theme-icon" class="ti ti-sun"></i></button>
         ${
           user
-            ? `<a class="user-box" href="profile.html">${getAvatar(user.name || user.login)}<span>${escapeHtml(user.name || user.login)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
-            : `<a class="btn btn-ghost" data-page="auth.html" href="auth.html">Вход / Регистрация</a>`
+            ? `<a class="user-box" href="/pages/profile.html">${getAvatar(user.name || user.login)}<span>${escapeHtml(user.name || user.login)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
+            : `<a class="btn btn-ghost" data-page="auth.html" href="/pages/auth.html">Вход / Регистрация</a>`
         }
       </div>
     </div>
@@ -368,7 +369,7 @@ async function renderHeader() {
       logoutUser();
       showToast("Вы вышли из аккаунта", "success");
       refreshHeaderAndTitle();
-      window.location.href = "index.html";
+      window.location.href = `${basePath}index.html`;
     });
   }
 }
