@@ -34,6 +34,7 @@ async function renderProductView(product) {
       <p class="product-desc">${escapeHtml(product.description)}</p>
       <div class="product-actions">
         <button class="btn btn-primary" id="add-to-cart" type="button"><i class="ti ti-shopping-bag"></i> В корзину</button>
+          <button class="btn btn-primary" id="buy-now" type="button"><i class="ti ti-bolt"></i> Купить сейчас</button>
         <button class="icon-btn wish-btn ${inWishlist ? "active" : ""}" id="add-to-wish" type="button"><i class="ti ti-heart"></i></button>
       </div>
       <div class="product-nav" style="display:flex; gap:12px; margin-top:24px;">

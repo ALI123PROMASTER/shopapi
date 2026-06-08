@@ -1,4 +1,35 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  // If an orderId is present in the query string, fetch and display that order instead of the cart flow
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('orderId');
+  if (orderId) {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      if (!res.ok) throw new Error('Order not found');
+      const { order, items } = await res.json();
+      // Populate order summary
+      const orderItemsRoot = document.getElementById("order-items-summary");
+      const orderTotalRoot = document.getElementById("order-total");
+      const total = items.reduce((sum, it) => sum + Number(it.price) * it.quantity, 0);
+      orderItemsRoot.innerHTML = items.map(it => `
+        <div class="summary-row">
+          <span>${escapeHtml(it.product_id)} × ${it.quantity}</span>
+          <span>$${(Number(it.price) * it.quantity).toFixed(2)}</span>
+        </div>`).join("");
+      orderTotalRoot.textContent = `$${total.toFixed(2)}`;
+      // Disable form inputs – order already placed
+      document.getElementById("order-name").value = order.name || '';
+      document.getElementById("order-phone").value = order.phone || '';
+      document.getElementById("order-address").value = order.address || '';
+      document.querySelectorAll("#order-name, #order-phone, #order-address").forEach(el => el.setAttribute('disabled', 'true'));
+      document.getElementById("btn-order").style.display = 'none';
+      return; // stop further cart logic
+    } catch (e) {
+      console.error(e);
+      // fallback to cart view if fetching fails
+    }
+  }
+  // ----- Existing cart‑based order flow follows -----
   applyTheme();
 
   const cart = await getCartInstance();

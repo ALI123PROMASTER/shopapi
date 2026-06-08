@@ -42,6 +42,22 @@ pool.on('error', (err) => {
   console.error('❌ Ошибка PostgreSQL:', err);
 });
 
+// Load schema creation helpers
+const createOrdersTable = require('./models/createOrders');
+const createOrderItemsTable = require('./models/createOrderItems');
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  pool,
 };
+
+// Ensure tables exist after pool is ready
+pool.on('connect', async () => {
+  try {
+    await createOrdersTable(pool);
+    await createOrderItemsTable(pool);
+    console.log('✅ Order tables ensured');
+  } catch (e) {
+    console.error('⚠️ Error creating order tables:', e.message);
+  }
+});

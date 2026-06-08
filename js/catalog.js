@@ -58,11 +58,13 @@ function createProductCard(product, inWishlist) {
           <button class="btn-add" data-id="${product.id}" type="button" aria-label="Добавить в корзину">
             <i class="ti ti-plus"></i>
           </button>
+          <button class="btn-buy-now" data-id="${product.id}" type="button" aria-label="Купить сейчас">Купить сейчас</button>
         </div>
       </div>
     </div>
   `;
 }
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   const catalogRoot = document.getElementById("catalog");
@@ -143,6 +145,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
     catalogRoot.addEventListener("click", async (event) => {
+  const buyNowBtn = event.target.closest('.btn-buy-now');
+  if (buyNowBtn) {
+    const productId = Number(buyNowBtn.dataset.id);
+    const product = state.products.find(p => p.id === productId);
+    if (product) {
+      // open modal with product info
+      window.showBuyNowModal(product);
+    }
+    return;
+  }
       const addButton = event.target.closest(".btn-add");
       const wishButton = event.target.closest(".wish-btn");
       const card = event.target.closest(".card");
