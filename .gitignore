@@ -4,3 +4,4 @@ design_polish_prompt.md
 backend/node_modules/
 backend/.env
 backend/package-lock.json
+.env
