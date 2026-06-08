@@ -6,10 +6,23 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+/* Добавляем в начало server.js (после объявлений const) */
+const path = require('path');
+
+/* Заменяем обработчик app.get('/') и добавляем раздачу статики */
+app.use(express.static(path.join(__dirname, '../'))); // Раздаем все файлы из основной папки
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
 
 app.use(cors());
 app.use(express.json());
 
+// Главная страница для проверки работы сервера
+app.get('/', (req, res) => {
+  res.send('API сервер интернет-магазина запущен и работает. Используйте эндпоинты /api/...');
+});
 // --- АУТЕНТИФИКАЦИЯ ---
 
 // Регистрация (добавлена для удобства)
