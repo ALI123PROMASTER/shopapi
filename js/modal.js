@@ -80,9 +80,9 @@ async function confirmBuyNow() {
     showToast('Заказ оформлен! 🎉', 'success');
     // Redirect to order page with orderId for confirmation
     if (data && data.orderId) {
-      window.location.href = `order.html?orderId=${data.orderId}`;
+      window.location.href = `/pages/order.html?orderId=${data.orderId}`;
     } else {
-      window.location.href = 'order.html';
+      window.location.href = '/pages/order.html';
     }
   } catch (err) {
     console.error(err);

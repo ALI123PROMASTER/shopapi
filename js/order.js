@@ -1,28 +1,37 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // If an orderId is present in the query string, fetch and display that order instead of the cart flow
   const urlParams = new URLSearchParams(window.location.search);
-  const orderId = urlParams.get('orderId');
+  const orderId = urlParams.get("orderId");
   if (orderId) {
     try {
       const res = await fetch(`/api/orders/${orderId}`);
-      if (!res.ok) throw new Error('Order not found');
+      if (!res.ok) throw new Error("Order not found");
       const { order, items } = await res.json();
       // Populate order summary
       const orderItemsRoot = document.getElementById("order-items-summary");
       const orderTotalRoot = document.getElementById("order-total");
-      const total = items.reduce((sum, it) => sum + Number(it.price) * it.quantity, 0);
-      orderItemsRoot.innerHTML = items.map(it => `
+      const total = items.reduce(
+        (sum, it) => sum + Number(it.price) * it.quantity,
+        0,
+      );
+      orderItemsRoot.innerHTML = items
+        .map(
+          (it) => `
         <div class="summary-row">
           <span>${escapeHtml(it.product_id)} × ${it.quantity}</span>
           <span>$${(Number(it.price) * it.quantity).toFixed(2)}</span>
-        </div>`).join("");
+        </div>`,
+        )
+        .join("");
       orderTotalRoot.textContent = `$${total.toFixed(2)}`;
       // Disable form inputs – order already placed
-      document.getElementById("order-name").value = order.name || '';
-      document.getElementById("order-phone").value = order.phone || '';
-      document.getElementById("order-address").value = order.address || '';
-      document.querySelectorAll("#order-name, #order-phone, #order-address").forEach(el => el.setAttribute('disabled', 'true'));
-      document.getElementById("btn-order").style.display = 'none';
+      document.getElementById("order-name").value = order.name || "";
+      document.getElementById("order-phone").value = order.phone || "";
+      document.getElementById("order-address").value = order.address || "";
+      document
+        .querySelectorAll("#order-name, #order-phone, #order-address")
+        .forEach((el) => el.setAttribute("disabled", "true"));
+      document.getElementById("btn-order").style.display = "none";
       return; // stop further cart logic
     } catch (e) {
       console.error(e);
@@ -34,7 +43,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const cart = await getCartInstance();
   if (!cart.items.length) {
-    window.location.href = "cart.html";
+    // Navigate to cart page (absolute path)
+    window.location.href = "/pages/cart.html";
     return;
   }
 
@@ -112,11 +122,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       cart.clear();
     }
-    
+
     await updateCartCount();
     showToast("Заказ оформлен! 🎉", "success");
     setTimeout(() => {
-      window.location.href = "index.html";
+      window.location.href = "/index.html";
     }, 2000);
   });
 });

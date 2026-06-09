@@ -118,7 +118,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("Корзина пуста", "error");
       return;
     }
-    window.location.href = "order.html";
+    // Navigate to order page (absolute path for clarity)
+    window.location.href = "/pages/order.html";
   });
 
   clearBtn?.addEventListener("click", async () => {

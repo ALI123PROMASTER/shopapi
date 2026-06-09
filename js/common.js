@@ -58,7 +58,7 @@ function logoutUser() {
 async function getCartInstance() {
   const user = getCurrentUser();
   const cart = new Cart(user ? user.id : "guest");
-  
+
   // Если пользователь залогинен, синхронизируем с БД
   if (user && user.id) {
     const dbItems = await apiGetCart(user.id);
@@ -188,7 +188,7 @@ function getAvatarColor(seedText) {
   return `hsl(${hue} 74% 45%)`;
 }
 
-function getBasePath(){return location.pathname.includes('/pages/')?"../":"";}
+function getBasePath() { return location.pathname.includes('/pages/') ? "../" : ""; }
 
 function markActiveLink() {
   const page = window.location.pathname.split("/").pop() || "index.html";
@@ -344,11 +344,10 @@ async function renderHeader() {
       </nav>
       <div class="header-actions">
         <button class="btn btn-ghost btn-theme" id="theme-toggle" type="button" aria-label="Переключить тему"><i id="theme-icon" class="ti ti-sun"></i></button>
-        ${
-          user
-            ? `<a class="user-box" href="/pages/profile.html">${getAvatar(user.name || user.login)}<span>${escapeHtml(user.name || user.login)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
-            : `<a class="btn btn-ghost" data-page="auth.html" href="/pages/auth.html">Вход / Регистрация</a>`
-        }
+        ${user
+      ? `<a class="user-box" href="/pages/profile.html">${getAvatar(user.name || user.login)}<span>${escapeHtml(user.name || user.login)}</span></a><button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>`
+      : `<a class="btn btn-ghost" data-page="auth.html" href="/pages/auth.html">Вход / Регистрация</a>`
+    }
       </div>
     </div>
   `;

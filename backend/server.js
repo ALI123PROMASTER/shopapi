@@ -6,6 +6,7 @@ const path = require('path');
 const db = require('./db');
 
 const app = express();
+// Use 3001 as default to avoid potential conflicts with other services on 3000
 const PORT = process.env.PORT || 3000;
 
 // Middleware — должен быть ДО static и маршрутов
@@ -129,24 +130,39 @@ app.get('/api/favorites', async (req, res) => {
 
 app.post('/api/favorites', async (req, res) => {
   const { user_id, product_id } = req.body;
+  // Guard: user must be logged in — missing user_id causes a NOT NULL / FK violation
+  if (!user_id || !product_id) {
+    return res.status(400).json({ error: 'user_id and product_id are required' });
+  }
   try {
     const result = await db.query(
-      'INSERT INTO favorites (user_id, product_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *',
+      // ON CONFLICT must reference column names, not an index name.
+      // A unique index created with CREATE UNIQUE INDEX is NOT a named constraint.
+      `INSERT INTO favorites (user_id, product_id)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, product_id) DO NOTHING
+       RETURNING *`,
       [user_id, product_id]
     );
     res.json(result.rows[0] || { message: 'Уже в избранном' });
   } catch (err) {
-    res.status(500).send(err.message);
+    // Surface the real PG error so the server console shows what went wrong
+    console.error('POST /api/favorites error:', err.message, '| detail:', err.detail);
+    res.status(500).json({ error: err.message, detail: err.detail || null });
   }
 });
 
 app.delete('/api/favorites', async (req, res) => {
   const { user_id, product_id } = req.body;
+  if (!user_id || !product_id) {
+    return res.status(400).json({ error: 'user_id and product_id are required' });
+  }
   try {
     await db.query('DELETE FROM favorites WHERE user_id = $1 AND product_id = $2', [user_id, product_id]);
     res.json({ message: 'Удалено из избранного' });
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error('DELETE /api/favorites error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 

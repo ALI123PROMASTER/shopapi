@@ -7,7 +7,7 @@ function renderProduct404() {
       <i class="ti ti-mood-sad"></i>
       <h3>Товар не найден</h3>
       <p>Проверьте ссылку или вернитесь в каталог.</p>
-      <button class="btn btn-outline" type="button" onclick="location.href='index.html'">В каталог</button>
+      <button class="btn btn-outline" type="button" onclick="location.href='/index.html'">В каталог</button>
     </div>
   `;
 }
@@ -45,33 +45,45 @@ async function renderProductView(product) {
   </div>
   `;
 
-  document.getElementById("add-to-cart")?.addEventListener("click", async () => {
-    await addToCart(product.id);
-    showToast("Добавлено в корзину!", "success");
+  const user = getCurrentUser();
+
+  document
+    .getElementById("add-to-cart")
+    ?.addEventListener("click", async () => {
+      await addToCart(product.id);
+      showToast("Добавлено в корзину!", "success");
+    });
+
+  document.getElementById("buy-now")?.addEventListener("click", () => {
+    if (typeof window.showBuyNowModal === "function") {
+      window.showBuyNowModal(product);
+    } else {
+      // fallback — переходим на страницу заказа
+      window.location.href = "/pages/order.html";
+    }
   });
 
   document.getElementById("to-catalog")?.addEventListener("click", () => {
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
   });
 
   document.getElementById("to-cart")?.addEventListener("click", () => {
-    window.location.href = "cart.html";
+    window.location.href = "/pages/cart.html";
   });
 
   document
     .getElementById("add-to-wish")
     ?.addEventListener("click", async () => {
-      if (!user) {
-        showToast("Войдите, чтобы добавить в избранное", "info");
-        return;
-      }
-
+      // Allow both logged‑in and guest users to toggle wishlist.
+      // Previously guests were blocked with a toast message, which
+      // prevented adding items to the wishlist for unauthenticated users.
       const isActive = await toggleWishlist(product.id);
       if (isActive) {
         showToast("Добавлено в избранное", "success");
       } else {
         showToast("Удалено из избранного", "success");
       }
+      // Re‑render the product view to update the button state.
       renderProductView(product);
     });
 }

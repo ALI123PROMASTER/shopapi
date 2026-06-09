@@ -18,7 +18,7 @@ async function renderComparePage() {
       <div class="placeholder">
         <h3>Недостаточно товаров для сравнения</h3>
         <p>Добавьте минимум 2 товара в сравнение на главной странице.</p>
-        <a class="btn btn-primary" href="index.html">В каталог</a>
+        <a class="btn btn-primary" href="/index.html">В каталог</a>
       </div>
     `;
     return;
@@ -33,24 +33,58 @@ async function renderComparePage() {
 
   // Генерируем строки таблицы
   const rowsHtml = [
-    { label: "Товар", render: (id) => byId[id] ? `<a href="product.html?id=${byId[id].id}">${escapeHtml(byId[id].title)}</a>` : "-" },
-    { label: "Фото", render: (id) => byId[id] ? `<img src="${escapeHtml(byId[id].image)}" alt="${escapeHtml(byId[id].title)}">` : "-" },
-    { label: "Категория", render: (id) => escapeHtml(byId[id]?.category || "-") },
+    {
+      label: "Товар",
+      render: (id) =>
+        byId[id]
+          ? `<a href="product.html?id=${byId[id].id}">${escapeHtml(byId[id].title)}</a>`
+          : "-",
+    },
+    {
+      label: "Фото",
+      render: (id) =>
+        byId[id]
+          ? `<img src="${escapeHtml(byId[id].image)}" alt="${escapeHtml(byId[id].title)}">`
+          : "-",
+    },
+    {
+      label: "Категория",
+      render: (id) => escapeHtml(byId[id]?.category || "-"),
+    },
     { label: "Цена", render: (id) => formatPrice(byId[id]?.price || 0) },
-    { label: "Рейтинг", render: (id) => byId[id] ? renderStars(byId[id].rating?.rate, byId[id].rating?.count) : "-" },
-    { label: "Описание", render: (id) => escapeHtml(byId[id]?.description || "-") },
-    { label: "Действия", render: (id) => byId[id] ? `
+    {
+      label: "Рейтинг",
+      render: (id) =>
+        byId[id]
+          ? renderStars(byId[id].rating?.rate, byId[id].rating?.count)
+          : "-",
+    },
+    {
+      label: "Описание",
+      render: (id) => escapeHtml(byId[id]?.description || "-"),
+    },
+    {
+      label: "Действия",
+      render: (id) =>
+        byId[id]
+          ? `
       <div class="actions-row">
         <button class="btn btn-primary" type="button" data-action="add" data-product-id="${byId[id].id}">В корзину</button>
         <button class="btn btn-ghost" type="button" data-action="remove" data-product-id="${byId[id].id}">Убрать</button>
       </div>
-    ` : "-" }
-  ].map(row => `
+    `
+          : "-",
+    },
+  ]
+    .map(
+      (row) => `
     <tr>
       <th>${row.label}</th>
-      ${ids.map(id => `<td>${row.render(id)}</td>`).join("")}
+      ${ids.map((id) => `<td>${row.render(id)}</td>`).join("")}
     </tr>
-  `).join("");
+  `,
+    )
+    .join("");
 
   root.innerHTML = `
     <div class="actions-row" style="margin-bottom:0.8rem;">
@@ -65,14 +99,16 @@ async function renderComparePage() {
     </div>
   `;
 
-  document.getElementById("clear-compare")?.addEventListener("click", async () => {
-    const currentIds = await getCompareList();
-    for (const id of currentIds) {
-      await toggleCompare(id);
-    }
-    showToast("Сравнение очищено", "success");
-    await renderComparePage();
-  });
+  document
+    .getElementById("clear-compare")
+    ?.addEventListener("click", async () => {
+      const currentIds = await getCompareList();
+      for (const id of currentIds) {
+        await toggleCompare(id);
+      }
+      showToast("Сравнение очищено", "success");
+      await renderComparePage();
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -84,7 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const button = event.target.closest("button[data-action]");
       if (!button) return;
 
-      const productId = Number(button.dataset.productId);
+      // The catalog uses `data-id` for product identifier, not `data-product-id`.
+      // Adjust to read the correct attribute to obtain the product ID.
+      // Buttons for adding to cart use `data-product-id`, while compare toggle uses `data-id`.
+      const productId = Number(button.dataset.productId ?? button.dataset.id);
       const action = button.dataset.action;
 
       if (action === "add") {

@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = "auth.html";
+    window.location.href = "/pages/auth.html";
     return;
   }
 
@@ -43,6 +43,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("logout-btn")?.addEventListener("click", () => {
     logoutUser();
     refreshHeaderAndTitle();
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
   });
 });

@@ -2,11 +2,12 @@ async function renderWishlist() {
   const root = document.getElementById("wishlist-items");
   if (!root) return;
 
+  // Allow both logged‑in and guest users to view the wishlist.
+  // Previously the code forced a redirect to the auth page when no user was
+  // present, which made the wishlist appear empty for guests. By keeping the
+  // logic that works with local storage (used for guests) we enable the
+  // wishlist to display items stored locally.
   const user = getCurrentUser();
-  if (!user) {
-    window.location.href = "auth.html";
-    return;
-  }
 
   const ids = await getWishlistIds();
   if (!ids.length) {
@@ -21,8 +22,8 @@ async function renderWishlist() {
     return;
   }
 
-  const products = await Promise.all(ids.map(id => getProductById(id)));
-  const items = products.filter(Boolean).map(p => new Product(p));
+  const products = await Promise.all(ids.map((id) => getProductById(id)));
+  const items = products.filter(Boolean).map((p) => new Product(p));
 
   root.innerHTML = items
     .map(
@@ -60,11 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!button) return;
 
     const productId = Number(button.dataset.id);
-    const user = getCurrentUser();
-    if (!user) {
-      window.location.href = "auth.html";
-      return;
-    }
+    // Allow both logged‑in and guest users to modify the wishlist.
+    // Previously guests were redirected to the auth page, which prevented
+    // adding items. By removing that check we enable local‑storage based
+    // wishlist functionality for guests.
 
     if (button.dataset.action === "add") {
       await addToCart(productId);

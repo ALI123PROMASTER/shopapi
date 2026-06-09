@@ -59,12 +59,15 @@ function createProductCard(product, inWishlist) {
             <i class="ti ti-plus"></i>
           </button>
           <button class="btn-buy-now" data-id="${product.id}" type="button" aria-label="Купить сейчас">Купить сейчас</button>
+          <!-- Compare button added back -->
+          <button class="compare-btn" data-action="compare" data-id="${product.id}" type="button" aria-label="Сравнить">
+            <i class="ti ti-arrows-horizontal"></i>
+          </button>
         </div>
       </div>
     </div>
   `;
 }
-
 
 document.addEventListener("DOMContentLoaded", async () => {
   const catalogRoot = document.getElementById("catalog");
@@ -89,72 +92,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     .map(createSkeletonCard)
     .join("");
 
-    try {
-      state.products = (await getProducts()).map((item) => new Product(item));
-      const categories = await getCategories();
-      const user = getCurrentUser();
-      if (user) {
-        state.wishlistIds = await getWishlistIds();
+  try {
+    state.products = (await getProducts()).map((item) => new Product(item));
+    const categories = await getCategories();
+    const user = getCurrentUser();
+    if (user) {
+      state.wishlistIds = await getWishlistIds();
+    }
+    renderCategoryFilters(categories, state.category);
+
+    function applyState() {
+      const filtered = state.products
+        .filter(
+          (item) =>
+            state.category === "all" || item.category === state.category,
+        )
+        .filter((item) =>
+          item.title.toLowerCase().includes(state.query.toLowerCase()),
+        );
+
+      const sorted = sortProducts(filtered, state.sort);
+      if (!sorted.length) {
+        catalogRoot.innerHTML = `<div class="placeholder">Ничего не найдено.</div>`;
+        return;
       }
-      renderCategoryFilters(categories, state.category);
-    
-      function applyState() {
-        const filtered = state.products
-          .filter(
-            (item) =>
-              state.category === "all" || item.category === state.category,
-          )
-          .filter((item) =>
-            item.title.toLowerCase().includes(state.query.toLowerCase()),
-          );
-  
-        const sorted = sortProducts(filtered, state.sort);
-        if (!sorted.length) {
-          catalogRoot.innerHTML = `<div class="placeholder">Ничего не найдено.</div>`;
-          return;
-        }
-  
-        catalogRoot.innerHTML = sorted
-          .map((product) =>
-            createProductCard(product, state.wishlistIds.includes(product.id)),
-          )
-          .join("");
-      }
-  
+
+      catalogRoot.innerHTML = sorted
+        .map((product) =>
+          createProductCard(product, state.wishlistIds.includes(product.id)),
+        )
+        .join("");
+    }
+
+    applyState();
+
+    searchInput?.addEventListener("input", (event) => {
+      state.query = event.target.value.trim();
       applyState();
-  
-      searchInput?.addEventListener("input", (event) => {
-        state.query = event.target.value.trim();
-        applyState();
-      });
-  
-      sortSelect?.addEventListener("change", (event) => {
-        state.sort = event.target.value;
-        applyState();
-      });
-  
-      categoriesRoot?.addEventListener("click", (event) => {
-        const button = event.target.closest("[data-category]");
-        if (!button) return;
-        state.category = button.dataset.category;
-        categoriesRoot
-          .querySelectorAll(".filter-pill")
-          .forEach((item) => item.classList.remove("active"));
-        button.classList.add("active");
-        applyState();
-      });
+    });
+
+    sortSelect?.addEventListener("change", (event) => {
+      state.sort = event.target.value;
+      applyState();
+    });
+
+    categoriesRoot?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      state.category = button.dataset.category;
+      categoriesRoot
+        .querySelectorAll(".filter-pill")
+        .forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      applyState();
+    });
 
     catalogRoot.addEventListener("click", async (event) => {
-  const buyNowBtn = event.target.closest('.btn-buy-now');
-  if (buyNowBtn) {
-    const productId = Number(buyNowBtn.dataset.id);
-    const product = state.products.find(p => p.id === productId);
-    if (product) {
-      // open modal with product info
-      window.showBuyNowModal(product);
-    }
-    return;
-  }
+      const buyNowBtn = event.target.closest(".btn-buy-now");
+      if (buyNowBtn) {
+        const productId = Number(buyNowBtn.dataset.id);
+        const product = state.products.find((p) => p.id === productId);
+        if (product) {
+          // open modal with product info
+          window.showBuyNowModal(product);
+        }
+        return;
+      }
       const addButton = event.target.closest(".btn-add");
       const wishButton = event.target.closest(".wish-btn");
       const card = event.target.closest(".card");
@@ -170,27 +173,48 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (wishButton) {
         event.stopPropagation();
-        if (!user) {
-          showToast("Войдите, чтобы добавить в избранное", "info");
-          return;
-        }
-
+        // Previously the UI required a logged‑in user to modify the wishlist.
+        // For a smoother experience we now allow guests to use the local
+        // storage based wishlist as well.
         const productId = Number(wishButton.dataset.id);
         const isActive = await toggleWishlist(productId);
-        
+
         if (isActive) {
           state.wishlistIds.push(productId);
           showToast("Добавлено в избранное", "success");
         } else {
-          state.wishlistIds = state.wishlistIds.filter(id => id !== productId);
+          state.wishlistIds = state.wishlistIds.filter(
+            (id) => id !== productId,
+          );
           showToast("Удалено из избранного", "success");
         }
         applyState();
         return;
       }
 
+      // Handle compare button
+      const compareButton = event.target.closest(
+        '.compare-btn[data-action="compare"]',
+      );
+      if (compareButton) {
+        event.stopPropagation();
+        // Allow both logged‑in and guest users to toggle compare items.
+        const productId = Number(compareButton.dataset.id);
+        const result = await toggleCompare(productId);
+        if (result.limitReached) {
+          showToast("Можно сравнивать максимум 3 товара", "error");
+        } else if (result.active) {
+          showToast("Товар добавлен в сравнение", "success");
+        } else {
+          showToast("Товар удалён из сравнения", "info");
+        }
+        // Optionally update UI state if needed (e.g., active class)
+        compareButton.classList.toggle("is-active", result.active);
+        return;
+      }
+
       if (card && card.dataset.productId) {
-        window.location.href = `product.html?id=${card.dataset.productId}`;
+        window.location.href = `/pages/product.html?id=${card.dataset.productId}`;
       }
     });
   } catch (error) {
